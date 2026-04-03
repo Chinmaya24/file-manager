@@ -434,7 +434,18 @@
         const response = await fetch(API + "/files");
 
         if (!response.ok) {
-          throw new Error("Failed to load files");
+          let errorDetails = null;
+          try {
+            errorDetails = await response.json();
+          } catch (_) {
+            // ignore: server may return non-JSON on some errors
+          }
+
+          const msg =
+            errorDetails?.reason ||
+            errorDetails?.error ||
+            `Failed to load files (HTTP ${response.status})`;
+          throw new Error(msg);
         }
 
         const data = await response.json();
