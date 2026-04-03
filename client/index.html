@@ -418,7 +418,20 @@
     const API =
       window.location.protocol === "file:"
         ? "http://localhost:3000"
-        : window.location.origin;
+        : (() => {
+            // If the service is hosted under a sub-path (reverse proxy), include it.
+            // Examples:
+            // - https://host/          -> basePath=""
+            // - https://host/file-manager/ -> basePath="/file-manager"
+            let basePath = (window.location.pathname || "/")
+              .replace(/\/[^\/]+\.html$/, "") // drop filename if present
+              .replace(/\/$/, ""); // drop trailing slash
+
+            // If the user opened /client/index.html directly, fall back to origin.
+            if (basePath === "/client") basePath = "";
+
+            return window.location.origin + basePath;
+          })();
 
     // ✅ Load files (from Google Drive)
     async function loadFiles() {
