@@ -42,6 +42,11 @@ loadEnvFileIfPresent(path.resolve(__dirname, ".env"));
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "client")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "client", "index.html"));
+});
 
 const upload = multer({ dest: "uploads/" });
 
@@ -338,4 +343,5 @@ app.put("/rename", async (req, res) => {
   }
 });
 
-app.listen(3000, () => console.log("Server running on 3000"));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));
