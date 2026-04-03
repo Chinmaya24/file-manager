@@ -35,52 +35,6 @@
       background-clip: text;
     }
 
-    .upload-section {
-      text-align: center;
-      margin-bottom: 40px;
-      padding: 30px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 20px;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    input[type="file"] {
-      margin: 15px;
-      padding: 12px 20px;
-      border-radius: 50px;
-      background: rgba(255, 255, 255, 0.9);
-      color: #333;
-      border: 2px solid transparent;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    input[type="file"]:hover {
-      background: rgba(255, 255, 255, 1);
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-
-    .upload-btn {
-      padding: 12px 30px;
-      border: none;
-      border-radius: 50px;
-      background: linear-gradient(45deg, #ff6b6b, #feca57);
-      color: white;
-      font-weight: 700;
-      font-size: 16px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-    }
-
-    .upload-btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
-    }
-
     #files {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -240,8 +194,44 @@
         grid-template-columns: 1fr;
       }
 
-      .upload-section {
-        padding: 20px 15px;
+      h1 {
+        font-size: 1.8rem;
+        margin: 20px 0 15px;
+      }
+
+      .container {
+        padding: 10px;
+      }
+
+      #files {
+        gap: 12px;
+        padding: 10px 0;
+      }
+
+      .card {
+        padding: 16px;
+        border-radius: 16px;
+      }
+
+      .file-name {
+        font-size: 16px;
+        margin-bottom: 10px;
+      }
+
+      .file-info {
+        font-size: 13px;
+        margin-bottom: 15px;
+      }
+
+      .file-actions {
+        gap: 8px;
+      }
+
+      .btn {
+        min-width: 0;
+        width: 100%;
+        font-size: 13px;
+        padding: 10px 14px;
       }
     }
 
@@ -381,6 +371,18 @@
       color: #333;
     }
 
+    /* Avoid hover “jump” effects on touch devices */
+    @media (hover: none) {
+      .card:hover {
+        transform: none;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      }
+
+      .btn:hover {
+        transform: none;
+      }
+    }
+
     @keyframes toastSlideIn {
       from {
         transform: translateX(100%);
@@ -408,61 +410,15 @@
   <div class="container">
     <h1>☁️ Cloud File Manager</h1>
 
-    <div class="upload-section">
-      <input type="file" id="fileInput">
-      <button class="upload-btn" onclick="upload()">Upload File</button>
-    </div>
-
     <div id="files"></div>
   </div>
 
 
 <script>
-    const API = "http://localhost:3000";
-
-    // ✅ Upload
-    async function upload() {
-      const fileInput = document.getElementById("fileInput");
-      const uploadBtn = document.querySelector('.upload-btn');
-      const file = fileInput.files[0];
-
-      if (!file) {
-        showError("Please select a file to upload");
-        return;
-      }
-
-      // Show loading state
-      const originalText = uploadBtn.textContent;
-      uploadBtn.textContent = "Uploading...";
-      uploadBtn.disabled = true;
-      uploadBtn.style.opacity = "0.7";
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
-        const response = await fetch(API + "/upload", {
-          method: "POST",
-          body: formData
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.reason || error.error);
-        }
-
-        fileInput.value = ""; // Clear file input
-        showSuccess("File uploaded successfully!");
-        loadFiles();
-      } catch (err) {
-        showError("Upload failed: " + err.message);
-      } finally {
-        // Reset loading state
-        uploadBtn.textContent = originalText;
-        uploadBtn.disabled = false;
-        uploadBtn.style.opacity = "1";
-      }
-    }
+    const API =
+      window.location.protocol === "file:"
+        ? "http://localhost:3000"
+        : window.location.origin;
 
     // ✅ Load files (from Google Drive)
     async function loadFiles() {
@@ -489,7 +445,7 @@
         if (files.length === 0) {
           container.innerHTML = `
             <div class="loading">
-              <div class="loading-text">No files found. Upload some files to get started!</div>
+              <div class="loading-text">No files found.</div>
             </div>
           `;
           return;
@@ -511,8 +467,6 @@
                 <div class="file-actions">
                   <a href="${API}/download/${f.id}" class="btn download-btn" target="_blank">Download</a>
                   <a href="https://drive.google.com/file/d/${f.id}/view" class="btn btn-open" target="_blank">View</a>
-                  <button class="btn btn-rename" onclick="renameFile('${f.id}', '${escapeHtml(f.name)}')">Rename</button>
-                  <button class="btn btn-delete" onclick="deleteFile('${f.id}')">Delete</button>
                 </div>
               </div>
             </div>
@@ -521,49 +475,6 @@
       } catch (err) {
         container.innerHTML = `<div class="loading"><div class="loading-text">Error loading files</div></div>`;
         showError("Failed to load files: " + err.message);
-      }
-    }
-
-    // ✅ Rename
-    async function renameFile(id, currentName) {
-      const newName = prompt("Enter new file name:", currentName);
-      if (!newName || newName.trim() === currentName) return;
-
-      try {
-        const response = await fetch(API + "/rename", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, newName: newName.trim() })
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.reason || error.error);
-        }
-
-        showSuccess("File renamed successfully!");
-        loadFiles();
-      } catch (err) {
-        showError("Rename failed: " + err.message);
-      }
-    }
-
-    // ✅ Delete
-    async function deleteFile(id) {
-      if (!confirm("Are you sure you want to delete this file?")) return;
-
-      try {
-        const response = await fetch(API + "/delete/" + id, { method: "DELETE" });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.reason || error.error);
-        }
-
-        showSuccess("File deleted successfully!");
-        loadFiles();
-      } catch (err) {
-        showError("Delete failed: " + err.message);
       }
     }
 
