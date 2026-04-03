@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: file-manager
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: GOOGLE_TYPE
+        sync: false
+      - key: GOOGLE_PROJECT_ID
+        sync: false
+      - key: GOOGLE_PRIVATE_KEY_ID
+        sync: false
+      - key: GOOGLE_PRIVATE_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_EMAIL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_AUTH_URI
+        sync: false
+      - key: GOOGLE_TOKEN_URI
+        sync: false
+      - key: GOOGLE_AUTH_PROVIDER_CERT_URL
+        sync: false
+      - key: GOOGLE_CLIENT_CERT_URL
+        sync: false
+      - key: GOOGLE_UNIVERSE_DOMAIN
+        sync: false
+      - key: GOOGLE_DRIVE_FOLDER_ID
+        sync: false
